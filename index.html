@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cellular Automata</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <style>
+        .panel {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+        }
+
+        .panel-heading {
+            padding: 4px 8px;
+            background-image: linear-gradient(to bottom, #f5f5f5 0%, #e8e8e8 100%);
+        }
+
+        .panel-body {
+            padding: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="display: flex;">
+        <canvas id="canvas" style="border-style: solid;"></canvas>
+        <canvas id="chart"></canvas>
+    </div>
+
+    <button id="start" type="button" onclick="start();">START</button>
+    <button id="stop" type="button" style="display: none;" onclick="stop();">STOP</button>
+    <button id="next" type="button" onclick="update(); view();">NEXT</button>
+    <button id="random" type="button" onclick="init(); view();">RANDOM</button>
+    <button id="clear" type="button" onclick="init(true); view();">CLEAR</button>
+    <table>
+        <tr>
+            <th>Speed</th>
+            <td>
+                <input id="range" type="range" value="10" min="10" max="100" step="10" oninput="changeSpeed();">
+                <label id="range_value"></label>
+            </td>
+        </tr>
+        <tr>
+            <th>Color</th>
+            <td>
+                <input id="gen" type="checkbox" checked="checked">
+                <label for="gen">Gen</label>
+
+                <input id="dna" type="checkbox" checked="checked">
+                <label for="dna">DNA</label>
+            </td>
+        </tr>
+        <tr>
+            <th>Map</th>
+            <td>
+                <input id="map3" type="radio" name="map" value="map3">
+                <label for="map3">3</label>
+
+                <input id="map4" type="radio" name="map" value="map4">
+                <label for="map4">4</label>
+
+                <input id="map6" type="radio" name="map" value="map6">
+                <label for="map6">6</label>
+
+                <input id="map8" type="radio" name="map" value="map8" checked="checked">
+                <label for="map8">8</label>
+
+                <input id="map9" type="radio" name="map" value="map9">
+                <label for="map9">9</label>
+
+                <input id="map12" type="radio" name="map" value="map12">
+                <label for="map12">12</label>
+
+                <input id="map18" type="radio" name="map" value="map18">
+                <label for="map18">18</label>
+
+                <input id="map24" type="radio" name="map" value="map24">
+                <label for="map24">24</label>
+            </td>
+        </tr>
+        <tr>
+            <th>Rule</th>
+            <td>
+                <div style="overflow-y: scroll; height: 200px;">
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <label>周期的</label>
+                        </div>
+                        <div class="panel-body">
+                            <input id="B345S5" type="radio" name="rule" value="B345S5">
+                            <label for="B345S5" title="Long life">B345/S5</label>
+
+                            <input id="B45678S2345" type="radio" name="rule" value="B45678S2345">
+                            <label for="B45678S2345" title="WalledCities">B45678/S2345</label>
+
+                            <input id="B058S145678" type="radio" name="rule" value="B058S145678">
+                            <label for="B058S145678" title="Blobby Coagulations">B058/S145678</label>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <label>周期的・縮小</label>
+                        </div>
+                        <div class="panel-body">
+                            <input id="B368S245" type="radio" name="rule" value="B368S245">
+                            <label for="B368S245" title="Move">B368/S245</label>
+
+                            <input id="B3678S34678" type="radio" name="rule" value="B3678S34678">
+                            <label for="B3678S34678" title="Day & Night">B3678/S34678</label>
+
+                            <input id="B4S23467" type="radio" name="rule" value="B4S23467">
+                            <label for="B4S23467" title="Black Oil">B4/S23467</label>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <label>周期的・拡張</label>
+                        </div>
+                        <div class="panel-body">
+                            <input id="B3678S235678" type="radio" name="rule" value="B3678S235678">
+                            <label for="B3678S235678" title="Stains">B3678/S235678</label>
+
+                            <input id="B345S4567" type="radio" name="rule" value="B345S4567">
+                            <label for="B345S4567" title="Assimilation">B345/S4567</label>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <label>拡張</label>
+                        </div>
+                        <div class="panel-body">
+                            <input id="B1S12" type="radio" name="rule" value="B1S12">
+                            <label for="B1S12" title="">B1/S12</label>
+
+                            <input id="B34S34" type="radio" name="rule" value="B34S34">
+                            <label for="B34S34" title="34 Life">B34/S34</label>
+
+                            <input id="B378S235678" type="radio" name="rule" value="B378S235678">
+                            <label for="B378S235678" title="Coagulations">B378/S235678</label>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <label>拡張・複製</label>
+                        </div>
+                        <div class="panel-body">
+                            <input id="B1S1" type="radio" name="rule" value="B1S1">
+                            <label for="B1S1" title="Gnarl">B1/S1</label>
+
+                            <input id="B1357S1357" type="radio" name="rule" value="B1357S1357">
+                            <label for="B1357S1357" title="Replicator">B1357/S1357</label>
+
+                            <input id="B25S4" type="radio" name="rule" value="B25S4">
+                            <label for="B25S4" title="Small replicator">B25/S4</label>
+                            <br>
+
+                            <input id="B12578S1234678" type="radio" name="rule" value="B12578S1234678">
+                            <label for="B12578S1234678" title="Single Point Carpet Layer">B12578/S1234678</label>
+
+                            <input id="B068S012456" type="radio" name="rule" value="B068S012456">
+                            <label for="B068S012456" title="Single Point Construction">B068/S012456</label>
+
+                            <input id="B1S123" type="radio" name="rule" value="B1S123">
+                            <label for="B1S123" title="Single Point Fractal Lattice">B1/S123</label>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <label>拡張・増設</label>
+                        </div>
+                        <div class="panel-body">
+                            <input id="B2S" type="radio" name="rule" value="B2S">
+                            <label for="B2S" title="Seeds">B2/S</label>
+
+                            <input id="B234S" type="radio" name="rule" value="B234S">
+                            <label for="B234S" title="Serviettes">B234/S</label>
+
+                            <input id="B3S" type="radio" name="rule" value="B3S">
+                            <label for="B3S" title="Flakes">B3/S</label>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <label>拡張・侵食</label>
+                        </div>
+                        <div class="panel-body">
+                            <input id="B3S1234" type="radio" name="rule" value="B3S1234">
+                            <label for="B3S1234" title="Mazectric">B3/S1234</label>
+
+                            <input id="B3S2345" type="radio" name="rule" value="B3S2345">
+                            <label for="B3S2345" title="Maze">B3/S2345</label>
+
+                            <input id="B3S12345" type="radio" name="rule" value="B3S12345">
+                            <label for="B3S12345" title="Maze">B3/S12345</label>
+
+                            <input id="B3S45678" type="radio" name="rule" value="B3S45678">
+                            <label for="B3S45678" title="Coral">B3/S45678</label>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <label>アメーバ</label>
+                        </div>
+                        <div class="panel-body">
+                            <input id="B357S1358" type="radio" name="rule" value="B357S1358">
+                            <label for="B357S1358" title="Amoeba">B357/S1358</label>
+
+                            <input id="B35678S5678" type="radio" name="rule" value="B35678S5678">
+                            <label for="B35678S5678" title="Diamoeba">B35678/S5678</label>
+
+                            <input id="B4678S35678" type="radio" name="rule" value="B4678S35678">
+                            <label for="B4678S35678" title="Anneal">B4678/S35678</label>
+                        </div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-heading">
+                            <label>ライフ</label>
+                        </div>
+                        <div class="panel-body">
+                            <input id="B3S23" type="radio" name="rule" value="B3S23" checked="checked">
+                            <label for="B3S23" title="Conway's Life">B3/S23</label>
+
+                            <input id="B36S23" type="radio" name="rule" value="B36S23">
+                            <label for="B36S23" title="HighLife">B36/S23</label>
+
+                            <input id="B36S125" type="radio" name="rule" value="B36S125">
+                            <label for="B36S125" title="2x2">B36/S125</label>
+                            <br>
+
+                            <input id="B368S238" type="radio" name="rule" value="B368S238">
+                            <label for="B368S238" title="Pseudo Life">B368/S238</label>
+
+                            <input id="B357S238" type="radio" name="rule" value="B357S238">
+                            <label for="B357S238" title="Pseudo Life">B357/S238</label>
+
+                            <input id="B357S1357" type="radio" name="rule" value="B357S1357">
+                            <label for="B357S1357" title="Pseudo life">B357/S1357</label>
+                            <br>
+
+                            <input id="B0123478S34678" type="radio" name="rule" value="B0123478S34678">
+                            <label for="B0123478S34678" title="Inverse Life">B0123478/S34678</label>
+                        </div>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <script type="text/javascript">
+        var length = 512;
+        var r = 1;
+
+        var canvas = $("#canvas")[0];
+        canvas.width = length;
+        canvas.height = length;
+
+        var ctx = canvas.getContext("2d");
+
+        var config = {
+            type: "line",
+            data: {
+                datasets: [
+                    {
+                        label: "SUM",
+                        backgroundColor: "#000",
+                    },
+                    {
+                        label: "DNA0",
+                        backgroundColor: "#F00",
+                    },
+                    {
+                        label: "DNA1",
+                        backgroundColor: "#0F0",
+                    },
+                    {
+                        label: "DNA2",
+                        backgroundColor: "#00F",
+                    },
+                    {
+                        label: "MIX",
+                        backgroundColor: "#0FF",
+                    },
+                ],
+            },
+            options: {
+                animation: false,
+                responsive: false,
+                showLine: false,
+                scales: {
+                    y: {
+                        type: 'logarithmic',
+                        min: 0,
+                        max: length * length,
+                    },
+                },
+            },
+        };
+
+        var chart = $("#chart")[0];
+        chart.width = length;
+        chart.height = length;
+        var chart = new Chart(chart, config);
+
+        var data = new Array(length);
+        for (let x = 0; x < length; x++) {
+            data[x] = new Array(length);
+        }
+
+        var dataHistory = [];
+
+        function init(clear = false) {
+            dataHistory = [];
+
+            var margin = length / 4;
+            for (let x = 0; x < length; x++) {
+                for (let y = 0; y < length; y++) {
+                    var gen = 0;
+                    var dna = 0;
+
+                    if (!(clear || x < margin || length - 1 - margin < x || y < margin || length - 1 - margin < y)) {
+                        gen = Math.floor(Math.random() * 2) == 0 ? 0 : 1;
+                        if (x < length / 2) {
+                            dna = 120;
+                        } else {
+                            dna = 240;
+                        }
+                    }
+
+                    data[x][y] = {
+                        x: x,
+                        y: y,
+                        gen: gen,
+                        dna: dna,
+                    };
+                }
+            }
+        }
+
+        function update() {
+            var map = $('input[name=map]:checked').val();
+            var rule = $('input[name=rule]:checked').val();
+
+            var ruleB = [];
+            var ruleS = [];
+            if (rule.startsWith("B")) {
+                var split = rule.split("S");
+                for (let i = 0; i <= 8; i++) {
+                    if (split[0].includes(i + "")) {
+                        ruleB.push(i);
+                    }
+                }
+                if (split[1] === "") {
+                    ruleS = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+                } else {
+                    for (let i = 0; i <= 8; i++) {
+                        if (split[1].includes(i + "")) {
+                            ruleS.push(i);
+                        }
+                    }
+                }
+            }
+
+            var temp = data.flat().map(d => {
+                var neighbours = getNeighbours(map, d.x, d.y);
+                var count = neighbours.filter(d => d.gen !== 0).length;
+
+                if (d.gen === 0) {
+                    if (ruleB.includes(count)) {
+                        var dna = 0;
+
+                        var filter = neighbours.filter(d => d.dna !== 0)
+                        if (filter.length !== 0) {
+                            dna = Math.floor(filter.reduce((v, d) => v + d.dna, 0) / filter.length);
+                        }
+
+                        return {
+                            x: d.x,
+                            y: d.y,
+                            gen: d.gen + 1,
+                            dna: dna,
+                        };
+                    }
+                } else {
+                    if (ruleS.includes(count)) {
+                        return {
+                            x: d.x,
+                            y: d.y,
+                            gen: d.gen + 1,
+                            dna: d.dna,
+                        };
+                    }
+                }
+
+                // else
+                return {
+                    x: d.x,
+                    y: d.y,
+                    gen: 0,
+                    dna: 0,
+                };
+            });
+
+            temp.forEach(d => data[d.x][d.y] = d);
+            dataHistory.push({
+                r: temp.filter(d => d.gen !== 0 && d.dna === 0).length,
+                g: temp.filter(d => d.gen !== 0 && d.dna === 120).length,
+                b: temp.filter(d => d.gen !== 0 && d.dna === 240).length,
+                sum: temp.filter(d => d.gen !== 0).length,
+            });
+        }
+
+        function view() {
+            var gen = $("#gen").prop("checked");
+            var dna = $("#dna").prop("checked");
+
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var pixels = imageData.data;
+            data.flat().forEach(d => {
+                var base = (d.y * imageData.width + d.x) * 4;
+
+                if (d.gen === 0) {
+                    pixels[base + 3] = 0;
+                } else {
+                    var h = 120;
+                    var v = 255;
+                    if (gen) {
+                        v = Math.max(0, 256 - d.gen);
+                    }
+                    if (dna) {
+                        h = d.dna;
+                    }
+
+                    if (h <= 60) {
+                        pixels[base + 0] = v;
+                        pixels[base + 1] = (h / 60) * v;
+                        pixels[base + 2] = 0;
+                    } else if (h <= 120) {
+                        pixels[base + 0] = (120 - h) / 60 * v;
+                        pixels[base + 1] = v;
+                        pixels[base + 2] = 0;
+                    } else if (h <= 180) {
+                        pixels[base + 0] = 0;
+                        pixels[base + 1] = v;
+                        pixels[base + 2] = (h - 120) / 60 * v;
+                    } else if (h <= 240) {
+                        pixels[base + 0] = 0;
+                        pixels[base + 1] = (240 - h) / 60 * v;
+                        pixels[base + 2] = v;
+                    } else if (h <= 300) {
+                        pixels[base + 0] = (h - 240) / 60 * v;
+                        pixels[base + 1] = 0;
+                        pixels[base + 2] = v;
+                    } else {
+                        pixels[base + 0] = v;
+                        pixels[base + 1] = 0;
+                        pixels[base + 2] = (360 - h) / 60 * v;
+                    }
+                    pixels[base + 3] = 255;
+                }
+            });
+            ctx.putImageData(imageData, 0, 0);
+
+            chart.data.labels = dataHistory.map((d, i) => i);
+            chart.data.datasets[0].data = dataHistory.map(d => d.sum);
+            chart.data.datasets[1].data = dataHistory.map(d => d.r);
+            chart.data.datasets[2].data = dataHistory.map(d => d.g);
+            chart.data.datasets[3].data = dataHistory.map(d => d.b);
+            chart.data.datasets[4].data = dataHistory.map(d => d.sum - d.r - d.g - d.b);
+            chart.update();
+        }
+
+        function getNeighbours(map, x, y) {
+            if (map === "map3") {
+                if (x % 2 === y % 2) {
+                    var filter = [
+                        { x: x - 1, y: y },
+                        { x: x, y: y - 1 },
+                        { x: x + 1, y: y },
+                    ];
+                } else {
+                    var filter = [
+                        { x: x - 1, y: y },
+                        { x: x, y: y + 1 },
+                        { x: x + 1, y: y },
+                    ];
+                }
+            }
+            else if (map === "map4") {
+                var filter = [
+                    { x: x - 1, y: y },
+                    { x: x, y: y - 1 },
+                    { x: x, y: y + 1 },
+                    { x: x + 1, y: y },
+                ];
+            }
+            else if (map === "map6") {
+                if (y % 2 === 0) {
+                    var filter = [
+                        { x: x - 1, y: y - 1 },
+                        { x: x - 1, y: y },
+                        { x: x - 1, y: y + 1 },
+                        { x: x, y: y - 1 },
+                        { x: x, y: y + 1 },
+                        { x: x + 1, y: y },
+                    ];
+                } else {
+                    var filter = [
+                        { x: x - 1, y: y },
+                        { x: x, y: y - 1 },
+                        { x: x, y: y + 1 },
+                        { x: x + 1, y: y - 1 },
+                        { x: x + 1, y: y },
+                        { x: x + 1, y: y + 1 },
+                    ];
+                }
+            }
+            else if (map === "map8") {
+                var filter = [
+                    { x: x - 1, y: y - 1 },
+                    { x: x - 1, y: y },
+                    { x: x - 1, y: y + 1 },
+                    { x: x, y: y - 1 },
+                    { x: x, y: y + 1 },
+                    { x: x + 1, y: y - 1 },
+                    { x: x + 1, y: y },
+                    { x: x + 1, y: y + 1 },
+                ];
+            }
+            else if (map === "map9") {
+                if (x % 2 === y % 2) {
+                    var filter = [
+                        { x: x - 2, y: y },
+                        { x: x - 1, y: y + 1 },
+                        { x: x - 1, y: y },
+                        { x: x - 1, y: y - 1 },
+                        { x: x, y: y - 1 },
+                        { x: x + 1, y: y - 1 },
+                        { x: x + 1, y: y },
+                        { x: x + 1, y: y + 1 },
+                        { x: x + 2, y: y },
+                    ];
+                } else {
+                    var filter = [
+                        { x: x - 2, y: y },
+                        { x: x - 1, y: y - 1 },
+                        { x: x - 1, y: y },
+                        { x: x - 1, y: y + 1 },
+                        { x: x, y: y + 1 },
+                        { x: x + 1, y: y + 1 },
+                        { x: x + 1, y: y },
+                        { x: x + 1, y: y - 1 },
+                        { x: x + 2, y: y },
+                    ];
+                }
+            }
+            else if (map === "map12") {
+                var filter = [
+                    { x: x - 1, y: y - 1 },
+                    { x: x - 1, y: y },
+                    { x: x - 2, y: y },
+                    { x: x - 1, y: y + 1 },
+                    { x: x, y: y - 1 },
+                    { x: x, y: y - 2 },
+                    { x: x, y: y + 1 },
+                    { x: x, y: y + 2 },
+                    { x: x + 1, y: y - 1 },
+                    { x: x + 1, y: y },
+                    { x: x + 2, y: y },
+                    { x: x + 1, y: y + 1 },
+                ];
+            }
+            else if (map === "map18") {
+                if (y % 2 === 0) {
+                    var filter = [
+                        { x: x - 2, y: y - 1 },
+                        { x: x - 2, y: y },
+                        { x: x - 2, y: y + 1 },
+                        { x: x - 1, y: y - 2 },
+                        { x: x - 1, y: y - 1 },
+                        { x: x - 1, y: y },
+                        { x: x - 1, y: y + 1 },
+                        { x: x - 1, y: y + 2 },
+                        { x: x, y: y - 2 },
+                        { x: x, y: y - 1 },
+                        { x: x, y: y + 1 },
+                        { x: x, y: y + 2 },
+                        { x: x + 1, y: y - 2 },
+                        { x: x + 1, y: y - 1 },
+                        { x: x + 1, y: y },
+                        { x: x + 1, y: y + 1 },
+                        { x: x + 1, y: y + 2 },
+                        { x: x + 2, y: y },
+                    ];
+                } else {
+                    var filter = [
+                        { x: x - 2, y: y },
+                        { x: x - 1, y: y - 2 },
+                        { x: x - 1, y: y - 1 },
+                        { x: x - 1, y: y },
+                        { x: x - 1, y: y + 1 },
+                        { x: x - 1, y: y + 2 },
+                        { x: x, y: y - 2 },
+                        { x: x, y: y - 1 },
+                        { x: x, y: y + 1 },
+                        { x: x, y: y + 2 },
+                        { x: x + 1, y: y - 2 },
+                        { x: x + 1, y: y - 1 },
+                        { x: x + 1, y: y },
+                        { x: x + 1, y: y + 1 },
+                        { x: x + 1, y: y + 2 },
+                        { x: x + 2, y: y - 1 },
+                        { x: x + 2, y: y },
+                        { x: x + 2, y: y + 1 },
+                    ];
+                }
+            } else if (map === "map24") {
+                var filter = [
+                    { x: x - 2, y: y - 2 },
+                    { x: x - 2, y: y - 1 },
+                    { x: x - 2, y: y },
+                    { x: x - 2, y: y + 1 },
+                    { x: x - 2, y: y + 2 },
+                    { x: x - 1, y: y - 2 },
+                    { x: x - 1, y: y - 1 },
+                    { x: x - 1, y: y },
+                    { x: x - 1, y: y + 1 },
+                    { x: x - 1, y: y + 2 },
+                    { x: x, y: y - 2 },
+                    { x: x, y: y - 1 },
+                    { x: x, y: y + 1 },
+                    { x: x, y: y + 2 },
+                    { x: x + 1, y: y - 2 },
+                    { x: x + 1, y: y - 1 },
+                    { x: x + 1, y: y },
+                    { x: x + 1, y: y + 1 },
+                    { x: x + 1, y: y + 2 },
+                    { x: x + 2, y: y - 2 },
+                    { x: x + 2, y: y - 1 },
+                    { x: x + 2, y: y },
+                    { x: x + 2, y: y + 1 },
+                    { x: x + 2, y: y + 2 },
+                ];
+            } else {
+                var filter = [];
+            }
+
+            var ret = [];
+            filter.forEach(d => {
+                if (0 <= d.x && d.x <= length - 1 && 0 <= d.y && d.y <= length - 1) {
+                    ret.push(data[d.x][d.y]);
+                }
+            });
+            return ret;
+        }
+    </script>
+    <script type="text/javascript">
+        var inputSpeed = $("#range");
+        var outputSpeed = $("#range_value");
+        var startButton = $("#start");
+        var stopButton = $("#stop");
+        var nextButton = $("#next");
+        var randomButton = $("#random");
+        var clearButton = $("#clear");
+
+        var interval = null;
+
+        changeSpeed();
+        init();
+        view();
+
+        function start() {
+            startButton.css("display", "none");
+            stopButton.css("display", "inline");
+            nextButton.prop('disabled', true);
+
+            update();
+            view();
+            interval = setInterval(() => {
+                update();
+                view();
+            }, 1000 / inputSpeed.val());
+        }
+        function stop() {
+            startButton.css("display", "inline");
+            stopButton.css("display", "none");
+            nextButton.prop('disabled', false);
+
+            clearInterval(interval);
+            interval = null;
+        }
+        function changeSpeed() {
+            outputSpeed.text(inputSpeed.val() + "[fps]");
+
+            if (interval) {
+                clearInterval(interval);
+                interval = setInterval(() => {
+                    update();
+                    view();
+                }, 1000 / inputSpeed.val());
+            }
+        }
+    </script>
+</body>
+
+</html>
